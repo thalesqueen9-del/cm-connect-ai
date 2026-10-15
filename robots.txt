@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://thalesqueen9-del.github.io/cm-connect-ai/sitemap.xml
