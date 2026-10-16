@@ -1,0 +1,7 @@
+name = "cm-connect-ia-chat"
+main = "worker.js"
+compatibility_date = "2026-10-16"
+
+[vars]
+ALLOWED_ORIGIN = "https://thalesqueen9-del.github.io"
+OPENAI_MODEL = "gpt-4o-mini"
