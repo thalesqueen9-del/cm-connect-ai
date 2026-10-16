@@ -13,5 +13,42 @@
 <footer class="footer"><div class="container foot"><span>© <span id="year">2026</span> CM Connect AI · TCHAPNGANG RYAN</span><span>Votre présence, notre signature ✦</span></div></footer>
 <button class="chatToggle" id="chatToggle" aria-expanded="false" aria-controls="chat">✦ Assistant</button><section class="chat" id="chat" aria-label="Assistant commercial"><div class="chatHeader"><strong>✦ Assistant CM Connect AI</strong><button type="button" id="closeChat" aria-label="Fermer">×</button></div><div class="chatBody" id="chatBody" aria-live="polite"><div class="msg">Bonjour 👋 Je peux vous renseigner sur nos services Instagram, TikTok ou Snapchat. Dites-moi ce que vous recherchez.</div></div><form class="chatForm" id="chatForm"><input id="question" aria-label="Votre message" placeholder="Écrivez votre demande..." required maxlength="500" autocomplete="off"><button type="submit">Envoyer</button></form></section>
 <script>
-(function(){'use strict';var year=document.getElementById('year');if(year)year.textContent=new Date().getFullYear();var toggle=document.getElementById('chatToggle'),chat=document.getElementById('chat'),close=document.getElementById('closeChat'),start=document.getElementById('startChat'),body=document.getElementById('chatBody'),form=document.getElementById('chatForm'),input=document.getElementById('question');function openChat(show){chat.classList.toggle('open',show);toggle.setAttribute('aria-expanded',String(show));if(show)input.focus()}toggle.addEventListener('click',function(){openChat(!chat.classList.contains('open'))});close.addEventListener('click',function(){openChat(false)});start.addEventListener('click',function(){openChat(true)});function addMessage(t,me){var d=document.createElement('div');d.className='msg'+(me?' me':'');d.textContent=t;body.appendChild(d);body.scrollTop=body.scrollHeight}function answer(v){var s=v.toLowerCase();if(/instagram|insta/.test(s))return 'Pour Instagram, nous proposons gestion de profil, stratégie éditoriale, stories et animation de communauté. Pour un accompagnement adapté, écrivez-nous sur WhatsApp : +237 651 420 782.';if(/tiktok|vidéo|video/.test(s))return 'Sur TikTok, nous vous aidons avec les concepts vidéo, les tendances, les publications et la visibilité. Souhaitez-vous préparer votre projet sur WhatsApp ?';if(/snap|story|spotlight/.test(s))return 'Pour Snapchat, nous accompagnons vos stories, Spotlight et la maintenance du compte. Contactez-nous sur WhatsApp pour définir vos objectifs.';if(/prix|tarif|budget|combien/.test(s))return 'Les tarifs sont personnalisés selon vos objectifs et les prestations choisies. Écrivez-nous sur WhatsApp au +237 651 420 782 pour un devis.';if(/whatsapp|contact|devis|parler|rendez/.test(s))return 'Contactez directement CM Connect AI : https://wa.me/237651420782 — CEO et fondateur : TCHAPNGANG RYAN.';return 'Merci pour votre message ! Nous accompagnons Instagram, TikTok et Snapchat. Précisez la plateforme qui vous intéresse, ou contactez-nous directement : https://wa.me/237651420782.'}form.addEventListener('submit',function(e){e.preventDefault();var v=input.value.trim();if(!v)return;addMessage(v,true);input.value='';addMessage(answer(v),false)})})();
+/* Définir l'URL de votre Worker Cloudflare ici après son déploiement.
+   Aucune clé API ne doit être ajoutée à ce fichier public. */
+window.CM_CONNECT_AI_API_URL = '';
+(function(){
+'use strict';
+var year=document.getElementById('year');if(year)year.textContent=new Date().getFullYear();
+var toggle=document.getElementById('chatToggle'),chat=document.getElementById('chat'),close=document.getElementById('closeChat'),start=document.getElementById('startChat'),body=document.getElementById('chatBody'),form=document.getElementById('chatForm'),input=document.getElementById('question');
+var history=[],busy=false;
+var connected=/^https:\/\//.test(window.CM_CONNECT_AI_API_URL||'');
+var header=document.querySelector('.chatHeader strong');
+header.textContent=connected?'✦ Assistant IA CM Connect AI':'✦ Assistant CM Connect AI · Démo';
+function openChat(show){chat.classList.toggle('open',show);toggle.setAttribute('aria-expanded',String(show));if(show)input.focus()}
+toggle.addEventListener('click',function(){openChat(!chat.classList.contains('open'))});
+close.addEventListener('click',function(){openChat(false)});
+start.addEventListener('click',function(){openChat(true)});
+function addMessage(t,me){var d=document.createElement('div');d.className='msg'+(me?' me':'');d.textContent=t;body.appendChild(d);body.scrollTop=body.scrollHeight;return d}
+function demo(v){var s=v.toLowerCase();if(/instagram|insta/.test(s))return 'Pour Instagram, nous proposons stratégie, contenus et animation de communauté. Pour un devis : https://wa.me/237651420782';if(/tiktok|vidéo|video/.test(s))return 'Nous accompagnons votre présence TikTok, des idées de vidéos à la gestion du profil. Parlons-en : https://wa.me/237651420782';if(/snap|story|spotlight/.test(s))return 'Nous proposons un accompagnement Snapchat pour stories, Spotlight et gestion du compte.';if(/prix|tarif|budget|combien/.test(s))return 'Chaque prestation dépend de vos objectifs. Pour un devis : https://wa.me/237651420782';return 'Je suis actuellement en mode démonstration. Une vraie IA conversationnelle sera disponible après activation du serveur. En attendant, décrivez votre besoin ou contactez-nous : https://wa.me/237651420782'}
+form.addEventListener('submit',async function(e){
+e.preventDefault();if(busy)return;var v=input.value.trim();if(!v)return;
+addMessage(v,true);input.value='';
+if(!connected){addMessage(demo(v),false);return}
+busy=true;form.querySelector('button').disabled=true;
+var waiting=addMessage('Je réfléchis…',false);
+try{
+var data=history.concat([{role:'user',content:v}]).slice(-12);
+var controller=new AbortController();
+var timeout=setTimeout(function(){controller.abort()},25000);
+var response;
+try {response=await fetch(window.CM_CONNECT_AI_API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:data}),signal:controller.signal})}finally{clearTimeout(timeout)}
+if(!response.ok)throw Error('Service temporairement indisponible');
+var payload=await response.json();
+if(!payload.reply||typeof payload.reply!=='string')throw Error('Réponse invalide');
+waiting.textContent=payload.reply;
+history=data.concat([{role:'assistant',content:payload.reply}]).slice(-12)
+}catch(err){waiting.textContent='La connexion à l’assistant IA est momentanément indisponible. Écrivez-nous directement sur WhatsApp : https://wa.me/237651420782'}
+finally{busy=false;form.querySelector('button').disabled=false;body.scrollTop=body.scrollHeight;input.focus()}
+});
+})();
 </script></body></html>
